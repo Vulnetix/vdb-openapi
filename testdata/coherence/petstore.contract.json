@@ -1,0 +1,600 @@
+{
+  "contract": "1.0.0",
+  "source": {
+    "format": "",
+    "specVersion": "",
+    "encoding": "",
+    "sha256": ""
+  },
+  "info": {
+    "title": "Pet store",
+    "version": "1.2.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1",
+      "resolved": "https://api.example.com/v1",
+      "basePath": "/v1",
+      "scheme": "https",
+      "host": "api.example.com"
+    }
+  ],
+  "operations": [
+    {
+      "method": "GET",
+      "pathTemplate": "/pets",
+      "key": "GET /pets",
+      "operationId": "listPets",
+      "tags": [
+        "pets"
+      ],
+      "deprecated": false,
+      "parameters": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "deprecated": false,
+          "style": "form",
+          "explode": true,
+          "allowReserved": false,
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "deprecated": false,
+          "style": "form",
+          "explode": true,
+          "allowReserved": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "available",
+              "sold"
+            ],
+            "enumCount": 2
+          },
+          "example": "available"
+        },
+        {
+          "name": "X-Request-Id",
+          "in": "header",
+          "required": false,
+          "deprecated": false,
+          "style": "simple",
+          "explode": false,
+          "allowReserved": false,
+          "schema": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-f0-9-]+$"
+          }
+        }
+      ],
+      "requestBody": null,
+      "responses": [
+        {
+          "code": "200",
+          "content": [
+            {
+              "type": "application/json",
+              "schema": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "name": "Pet",
+                  "type": "object",
+                  "properties": {
+                    "age": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "readOnly": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 50
+                    },
+                    "owner_email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "tag": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          ],
+          "headers": []
+        },
+        {
+          "code": "429",
+          "content": [],
+          "headers": []
+        },
+        {
+          "code": "default",
+          "content": [
+            {
+              "type": "application/json",
+              "schema": {
+                "name": "Error",
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ],
+          "headers": []
+        }
+      ],
+      "security": {
+        "state": "required",
+        "from": "document",
+        "alternatives": [
+          [
+            {
+              "scheme": "apiKey",
+              "scopes": []
+            }
+          ]
+        ]
+      },
+      "servers": [
+        {
+          "url": "https://api.example.com/v1",
+          "resolved": "https://api.example.com/v1",
+          "basePath": "/v1",
+          "scheme": "https",
+          "host": "api.example.com"
+        }
+      ],
+      "callbacks": [],
+      "piiHints": [
+        {
+          "kind": "email",
+          "where": "response:200:owner_email"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "pathTemplate": "/pets",
+      "key": "POST /pets",
+      "operationId": "createPet",
+      "tags": [
+        "pets"
+      ],
+      "deprecated": false,
+      "parameters": [],
+      "requestBody": {
+        "required": true,
+        "content": [
+          {
+            "type": "application/json",
+            "schema": {
+              "name": "Pet",
+              "type": "object",
+              "properties": {
+                "age": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": true
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 50
+                },
+                "owner_email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "tag": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "responses": [
+        {
+          "code": "201",
+          "content": [
+            {
+              "type": "application/json",
+              "schema": {
+                "name": "Pet",
+                "type": "object",
+                "properties": {
+                  "age": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "owner_email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "headers": []
+        },
+        {
+          "code": "400",
+          "content": [
+            {
+              "type": "application/json",
+              "schema": {
+                "name": "Error",
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ],
+          "headers": []
+        }
+      ],
+      "security": {
+        "state": "required",
+        "from": "operation",
+        "alternatives": [
+          [
+            {
+              "scheme": "oauth",
+              "scopes": [
+                "write:pets"
+              ]
+            }
+          ]
+        ]
+      },
+      "servers": [
+        {
+          "url": "https://api.example.com/v1",
+          "resolved": "https://api.example.com/v1",
+          "basePath": "/v1",
+          "scheme": "https",
+          "host": "api.example.com"
+        }
+      ],
+      "callbacks": [],
+      "piiHints": [
+        {
+          "kind": "email",
+          "where": "body:owner_email"
+        },
+        {
+          "kind": "email",
+          "where": "response:201:owner_email"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "pathTemplate": "/pets/{petId}",
+      "key": "GET /pets/{param}",
+      "operationId": "getPet",
+      "tags": [],
+      "deprecated": false,
+      "parameters": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "deprecated": false,
+          "style": "simple",
+          "explode": false,
+          "allowReserved": false,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "requestBody": null,
+      "responses": [
+        {
+          "code": "200",
+          "content": [
+            {
+              "type": "application/json",
+              "schema": {
+                "name": "Pet",
+                "type": "object",
+                "properties": {
+                  "age": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "owner_email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "headers": []
+        },
+        {
+          "code": "404",
+          "content": [],
+          "headers": []
+        }
+      ],
+      "security": {
+        "state": "none",
+        "from": "operation",
+        "alternatives": []
+      },
+      "servers": [
+        {
+          "url": "https://api.example.com/v1",
+          "resolved": "https://api.example.com/v1",
+          "basePath": "/v1",
+          "scheme": "https",
+          "host": "api.example.com"
+        }
+      ],
+      "callbacks": [],
+      "piiHints": [
+        {
+          "kind": "email",
+          "where": "response:200:owner_email"
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "pathTemplate": "/pets/{petId}",
+      "key": "DELETE /pets/{param}",
+      "operationId": "deletePet",
+      "tags": [],
+      "deprecated": true,
+      "parameters": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "deprecated": false,
+          "style": "simple",
+          "explode": false,
+          "allowReserved": false,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "requestBody": null,
+      "responses": [
+        {
+          "code": "204",
+          "content": [],
+          "headers": []
+        }
+      ],
+      "security": {
+        "state": "optional",
+        "from": "operation",
+        "alternatives": [
+          [
+            {
+              "scheme": "basicAuth",
+              "scopes": []
+            }
+          ]
+        ]
+      },
+      "servers": [
+        {
+          "url": "https://api.example.com/v1",
+          "resolved": "https://api.example.com/v1",
+          "basePath": "/v1",
+          "scheme": "https",
+          "host": "api.example.com"
+        }
+      ],
+      "callbacks": [],
+      "piiHints": []
+    },
+    {
+      "method": "POST",
+      "pathTemplate": "/pets/{petId}/photo",
+      "key": "POST /pets/{param}/photo",
+      "operationId": "uploadPhoto",
+      "tags": [],
+      "deprecated": false,
+      "parameters": [
+        {
+          "name": "petId",
+          "in": "path",
+          "required": true,
+          "deprecated": false,
+          "style": "simple",
+          "explode": false,
+          "allowReserved": false,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": [
+          {
+            "type": "multipart/form-data",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "caption": {
+                  "type": "string",
+                  "maxLength": 140
+                },
+                "photo": {
+                  "type": "string",
+                  "format": "binary",
+                  "contentMediaType": "application/octet-stream"
+                }
+              },
+              "required": [
+                "photo"
+              ]
+            }
+          }
+        ]
+      },
+      "responses": [
+        {
+          "code": "204",
+          "content": [],
+          "headers": []
+        }
+      ],
+      "security": {
+        "state": "required",
+        "from": "document",
+        "alternatives": [
+          [
+            {
+              "scheme": "apiKey",
+              "scopes": []
+            }
+          ]
+        ]
+      },
+      "servers": [
+        {
+          "url": "https://api.example.com/v1",
+          "resolved": "https://api.example.com/v1",
+          "basePath": "/v1",
+          "scheme": "https",
+          "host": "api.example.com"
+        }
+      ],
+      "callbacks": [],
+      "piiHints": []
+    }
+  ],
+  "webhooks": [],
+  "securitySchemes": {
+    "apiKey": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "X-API-Key"
+    },
+    "basicAuth": {
+      "type": "http",
+      "scheme": "basic"
+    },
+    "oauth": {
+      "type": "oauth2",
+      "flows": [
+        {
+          "kind": "authorizationCode",
+          "authorizationUrl": "https://auth.example.com/authorize",
+          "tokenUrl": "https://auth.example.com/token",
+          "scopes": [
+            "read:pets",
+            "write:pets"
+          ]
+        }
+      ]
+    }
+  },
+  "tags": [
+    "pets"
+  ],
+  "losses": [],
+  "issues": []
+}

@@ -1,0 +1,27 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+bin/
+
+# Test artifacts
+*.test
+*.out
+coverage.*
+
+# Go workspace
+go.work
+go.work.sum
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Vulnetix scan output and credentials
+.vulnetix/
+memory.yaml
+sast.sarif
+sbom.cdx.json
+settings.json

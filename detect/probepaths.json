@@ -1,0 +1,35 @@
+{
+    "about": "Well-known paths where frameworks and gateways serve an API description. The one list for the CLI (vulnetix api discover), vdb-site remote probes and the website. Probes send GET with no credentials, and only to hosts whose probe mode allows guessing paths.",
+    "version": "1",
+    "paths": [
+        { "path": "/openapi.json", "serves": "openapi", "frameworks": ["fastapi", "nestjs", "generic"] },
+        { "path": "/openapi.yaml", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/openapi", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/swagger.json", "serves": "swagger", "frameworks": ["generic", "go-swagger"] },
+        { "path": "/swagger.yaml", "serves": "swagger", "frameworks": ["generic"] },
+        { "path": "/v3/api-docs", "serves": "openapi", "frameworks": ["springdoc"] },
+        { "path": "/v2/api-docs", "serves": "swagger", "frameworks": ["springfox"] },
+        { "path": "/swagger/v1/swagger.json", "serves": "openapi", "frameworks": ["swashbuckle"] },
+        { "path": "/swagger/doc.json", "serves": "swagger", "frameworks": ["swag"] },
+        { "path": "/api-docs", "serves": "openapi", "frameworks": ["swagger-ui-express", "generic"] },
+        { "path": "/api-docs.json", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/api/openapi.json", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/api/swagger.json", "serves": "swagger", "frameworks": ["generic"] },
+        { "path": "/api/v1/openapi.json", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/docs/openapi.json", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/q/openapi", "serves": "openapi", "frameworks": ["quarkus"] },
+        { "path": "/openapi/v1.json", "serves": "openapi", "frameworks": ["aspnetcore"] },
+        { "path": "/api/schema/", "serves": "openapi", "frameworks": ["drf-spectacular"] },
+        { "path": "/schema/openapi.json", "serves": "openapi", "frameworks": ["litestar"] },
+        { "path": "/.well-known/openapi.json", "serves": "openapi", "frameworks": ["generic"] },
+        { "path": "/.well-known/openapi.yaml", "serves": "openapi", "frameworks": ["generic"] }
+    ],
+    "uiPaths": [
+        { "path": "/docs", "serves": "swagger-ui", "frameworks": ["fastapi"] },
+        { "path": "/redoc", "serves": "redoc", "frameworks": ["fastapi"] },
+        { "path": "/swagger-ui.html", "serves": "swagger-ui", "frameworks": ["springfox", "springdoc"] },
+        { "path": "/swagger-ui/index.html", "serves": "swagger-ui", "frameworks": ["springdoc"] },
+        { "path": "/swagger/index.html", "serves": "swagger-ui", "frameworks": ["swashbuckle", "swag"] },
+        { "path": "/graphql", "serves": "graphql", "frameworks": ["generic"] }
+    ]
+}

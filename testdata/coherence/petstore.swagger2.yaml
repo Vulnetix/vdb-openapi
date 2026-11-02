@@ -1,0 +1,162 @@
+swagger: "2.0"
+info:
+  title: Pet store
+  version: 1.2.0
+host: api.example.com
+basePath: /v1
+schemes: [https]
+consumes: [application/json]
+produces: [application/json]
+tags:
+  - name: pets
+securityDefinitions:
+  apiKey:
+    type: apiKey
+    in: header
+    name: X-API-Key
+  basicAuth:
+    type: basic
+  oauth:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: https://auth.example.com/authorize
+    tokenUrl: https://auth.example.com/token
+    scopes:
+      read:pets: Read pets
+      write:pets: Change pets
+security:
+  - apiKey: []
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      tags: [pets]
+      parameters:
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+        - name: status
+          in: query
+          type: string
+          enum: [available, sold]
+        - name: X-Request-Id
+          in: header
+          type: string
+          maxLength: 64
+          pattern: "^[a-f0-9-]+$"
+      responses:
+        "200":
+          description: Pets
+          schema:
+            type: array
+            maxItems: 100
+            items:
+              $ref: "#/definitions/Pet"
+        "429":
+          description: Slow down
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      operationId: createPet
+      tags: [pets]
+      security:
+        - oauth: [write:pets]
+      parameters:
+        - name: pet
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Pet"
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: "#/definitions/Pet"
+        "400":
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        type: string
+        format: uuid
+    get:
+      operationId: getPet
+      security: []
+      responses:
+        "200":
+          description: A pet
+          schema:
+            $ref: "#/definitions/Pet"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePet
+      deprecated: true
+      security:
+        - basicAuth: []
+        - {}
+      responses:
+        "204":
+          description: Deleted
+  /pets/{petId}/photo:
+    post:
+      operationId: uploadPhoto
+      consumes: [multipart/form-data]
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: photo
+          in: formData
+          required: true
+          type: file
+        - name: caption
+          in: formData
+          type: string
+          maxLength: 140
+      responses:
+        "204":
+          description: Stored
+definitions:
+  Pet:
+    type: object
+    required: [id, name]
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      name:
+        type: string
+        minLength: 1
+        maxLength: 50
+      tag:
+        type: string
+        x-nullable: true
+      age:
+        type: integer
+        minimum: 0
+        exclusiveMinimum: true
+      owner_email:
+        type: string
+        format: email
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string

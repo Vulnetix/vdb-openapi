@@ -1,0 +1,20 @@
+{
+    "about": "Golden cases for route.Key, route.IsNoise and route.Identifying. Byte copies live in cli, vdb-site, siem and website; each runs these cases. Change them here first.",
+    "cases": [
+        { "method": "get", "path": "/users/:id", "key": "GET /users/{param}", "noise": false, "identifying": true },
+        { "method": "GET", "path": "/users/{userId}", "key": "GET /users/{param}", "noise": false, "identifying": true },
+        { "method": "GET", "path": "/users/<int:id>", "key": "GET /users/{param}", "noise": false, "identifying": true },
+        { "method": "GET", "path": "/files/*", "key": "GET /files/{param}", "noise": false, "identifying": true },
+        { "method": "post", "path": "/orders/", "key": "POST /orders", "noise": false, "identifying": true },
+        { "method": "GET", "path": "/search?q=x#top", "key": "GET /search", "noise": false, "identifying": true },
+        { "method": "HandleFunc", "path": "/api/v1/things", "key": "ANY /api/v1/things", "noise": false, "identifying": true },
+        { "method": "all", "path": "/x", "key": "ANY /x", "noise": false, "identifying": true },
+        { "method": "GET", "path": "/{a}/{b}", "key": "GET /{param}/{param}", "noise": false, "identifying": false },
+        { "method": "GET", "path": "/healthz", "key": "GET /healthz", "noise": true, "identifying": true },
+        { "method": "GET", "path": "/Metrics/", "key": "GET /Metrics", "noise": true, "identifying": true },
+        { "method": "GET", "path": "/", "key": "GET /", "noise": true, "identifying": false },
+        { "method": "GET", "path": "users", "key": "", "noise": false, "identifying": false },
+        { "method": "GET", "path": "", "key": "", "noise": true, "identifying": false },
+        { "method": "PATCH", "path": "/a/{id}/b/:sub/c", "key": "PATCH /a/{param}/b/{param}/c", "noise": false, "identifying": true }
+    ]
+}

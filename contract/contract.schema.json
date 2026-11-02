@@ -1,0 +1,664 @@
+{
+  "$defs": {
+    "Document": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "type": "string"
+        },
+        "info": {
+          "$ref": "#/$defs/Info"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/Issue"
+          },
+          "type": "array"
+        },
+        "losses": {
+          "items": {
+            "$ref": "#/$defs/Loss"
+          },
+          "type": "array"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/Operation"
+          },
+          "type": "array"
+        },
+        "securitySchemes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SecurityScheme"
+          },
+          "type": "object"
+        },
+        "servers": {
+          "items": {
+            "$ref": "#/$defs/Server"
+          },
+          "type": "array"
+        },
+        "source": {
+          "$ref": "#/$defs/Source"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "webhooks": {
+          "items": {
+            "$ref": "#/$defs/Operation"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "contract",
+        "info",
+        "issues",
+        "losses",
+        "operations",
+        "securitySchemes",
+        "servers",
+        "source",
+        "tags",
+        "webhooks"
+      ],
+      "type": "object"
+    },
+    "Info": {
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "version"
+      ],
+      "type": "object"
+    },
+    "Issue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "pointer": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "pointer",
+        "severity"
+      ],
+      "type": "object"
+    },
+    "Loss": {
+      "additionalProperties": false,
+      "properties": {
+        "construct": {
+          "type": "string"
+        },
+        "pointer": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "construct",
+        "pointer",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "MediaType": {
+      "additionalProperties": false,
+      "properties": {
+        "encoding": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchemaSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "type"
+      ],
+      "type": "object"
+    },
+    "OAuthFlow": {
+      "additionalProperties": false,
+      "properties": {
+        "authorizationUrl": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "scopes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenUrl": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "scopes"
+      ],
+      "type": "object"
+    },
+    "Operation": {
+      "additionalProperties": false,
+      "properties": {
+        "callbacks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "key": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "operationId": {
+          "type": "string"
+        },
+        "parameters": {
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "type": "array"
+        },
+        "pathTemplate": {
+          "type": "string"
+        },
+        "piiHints": {
+          "items": {
+            "$ref": "#/$defs/PIIHint"
+          },
+          "type": "array"
+        },
+        "requestBody": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RequestBody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "responses": {
+          "items": {
+            "$ref": "#/$defs/Response"
+          },
+          "type": "array"
+        },
+        "security": {
+          "$ref": "#/$defs/Security"
+        },
+        "servers": {
+          "items": {
+            "$ref": "#/$defs/Server"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "webhook": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "callbacks",
+        "deprecated",
+        "key",
+        "method",
+        "parameters",
+        "pathTemplate",
+        "piiHints",
+        "requestBody",
+        "responses",
+        "security",
+        "servers",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "PIIHint": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "where": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "where"
+      ],
+      "type": "object"
+    },
+    "Parameter": {
+      "additionalProperties": false,
+      "properties": {
+        "allowReserved": {
+          "type": "boolean"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "example": {
+          "type": "string"
+        },
+        "explode": {
+          "type": "boolean"
+        },
+        "in": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "schema": {
+          "$ref": "#/$defs/SchemaSummary"
+        },
+        "style": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "allowReserved",
+        "deprecated",
+        "explode",
+        "in",
+        "name",
+        "required",
+        "schema",
+        "style"
+      ],
+      "type": "object"
+    },
+    "RequestBody": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/$defs/MediaType"
+          },
+          "type": "array"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "content",
+        "required"
+      ],
+      "type": "object"
+    },
+    "Response": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "content": {
+          "items": {
+            "$ref": "#/$defs/MediaType"
+          },
+          "type": "array"
+        },
+        "headers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "content",
+        "headers"
+      ],
+      "type": "object"
+    },
+    "SchemaSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "additionalProperties": {
+          "type": "boolean"
+        },
+        "contentEncoding": {
+          "type": "string"
+        },
+        "contentMediaType": {
+          "type": "string"
+        },
+        "enum": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "enumCount": {
+          "type": "integer"
+        },
+        "exclusiveMaximum": {
+          "type": "boolean"
+        },
+        "exclusiveMinimum": {
+          "type": "boolean"
+        },
+        "format": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/$defs/SchemaSummary"
+        },
+        "maxItems": {
+          "type": "integer"
+        },
+        "maxLength": {
+          "type": "integer"
+        },
+        "maxProperties": {
+          "type": "integer"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "minItems": {
+          "type": "integer"
+        },
+        "minLength": {
+          "type": "integer"
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "multipleOf": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SchemaSummary"
+          },
+          "type": "object"
+        },
+        "readOnly": {
+          "type": "boolean"
+        },
+        "recursive": {
+          "type": "boolean"
+        },
+        "required": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        },
+        "types": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uniqueItems": {
+          "type": "boolean"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/SchemaSummary"
+          },
+          "type": "array"
+        },
+        "writeOnly": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "SchemeUse": {
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "type": "string"
+        },
+        "scopes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "scheme",
+        "scopes"
+      ],
+      "type": "object"
+    },
+    "Security": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/SchemeUse"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "from": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "alternatives",
+        "from",
+        "state"
+      ],
+      "type": "object"
+    },
+    "SecurityScheme": {
+      "additionalProperties": false,
+      "properties": {
+        "bearerFormat": {
+          "type": "string"
+        },
+        "flows": {
+          "items": {
+            "$ref": "#/$defs/OAuthFlow"
+          },
+          "type": "array"
+        },
+        "in": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "openIdConnectUrl": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Server": {
+      "additionalProperties": false,
+      "properties": {
+        "basePath": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "resolved": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "variables": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ServerVariable"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "basePath",
+        "resolved",
+        "url"
+      ],
+      "type": "object"
+    },
+    "ServerVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "string"
+        },
+        "enum": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "default"
+      ],
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "encoding": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "specVersion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "encoding",
+        "format",
+        "sha256",
+        "specVersion"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/Vulnetix/vdb-openapi/contract/contract.schema.json",
+  "$ref": "#/$defs/Document",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Every Swagger 2.0, OpenAPI 3.0 and OpenAPI 3.1 document reads as this shape. Generated from package oas; do not edit by hand.",
+  "title": "Vulnetix API description contract 1.0.0"
+}

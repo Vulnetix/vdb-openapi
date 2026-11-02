@@ -1,0 +1,40 @@
+{
+    "about": "Known-bad string values, used only offline to test a spec's own patterns. literal holds payloads as an attacker types them; encoded holds the same payloads after percent, double-percent, overlong UTF-8, unicode-escape and HTML-entity encoding. A pattern defends pattern-rejects-known-bad when it rejects every literal, and pattern-rejects-encoded when it rejects every encoded one.",
+    "version": "1",
+    "literal": [
+        { "class": "sql", "value": "' OR '1'='1" },
+        { "class": "sql", "value": "1; DROP TABLE users--" },
+        { "class": "sql", "value": "admin'--" },
+        { "class": "nosql", "value": "{\"$ne\": null}" },
+        { "class": "nosql", "value": "$where" },
+        { "class": "xss", "value": "<script>alert(1)</script>" },
+        { "class": "xss", "value": "javascript:alert(1)" },
+        { "class": "xss", "value": "\"><img src=x onerror=alert(1)>" },
+        { "class": "traversal", "value": "../../etc/passwd" },
+        { "class": "traversal", "value": "..\\..\\windows\\win.ini" },
+        { "class": "command", "value": "; id" },
+        { "class": "command", "value": "| id" },
+        { "class": "command", "value": "`id`" },
+        { "class": "command", "value": "$(id)" },
+        { "class": "ssti", "value": "{{7*7}}" },
+        { "class": "ssti", "value": "${7*7}" },
+        { "class": "ldap", "value": "*)(uid=*" },
+        { "class": "crlf", "value": "a\r\nSet-Cookie: x=1" },
+        { "class": "null-byte", "value": "a\u0000b" }
+    ],
+    "encoded": [
+        { "class": "sql", "value": "%27%20OR%20%271%27%3D%271" },
+        { "class": "sql", "value": "%2527%20OR%201%3D1" },
+        { "class": "sql", "value": "\\u0027 OR 1=1" },
+        { "class": "sql", "value": "&#39; OR 1=1" },
+        { "class": "xss", "value": "%3Cscript%3Ealert(1)%3C%2Fscript%3E" },
+        { "class": "xss", "value": "&lt;script&gt;alert(1)&lt;/script&gt;" },
+        { "class": "xss", "value": "\\u003cscript\\u003e" },
+        { "class": "traversal", "value": "..%2f..%2fetc%2fpasswd" },
+        { "class": "traversal", "value": "..%252f..%252fetc%252fpasswd" },
+        { "class": "traversal", "value": "%c0%ae%c0%ae%c0%afetc%c0%afpasswd" },
+        { "class": "command", "value": "%3B%20id" },
+        { "class": "crlf", "value": "a%0d%0aSet-Cookie:%20x=1" },
+        { "class": "null-byte", "value": "a%00b" }
+    ]
+}

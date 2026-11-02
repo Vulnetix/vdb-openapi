@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Pet store
+  version: 1.2.0
+servers:
+  - url: https://api.example.com/v1
+tags:
+  - name: pets
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    basicAuth:
+      type: http
+      scheme: basic
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            read:pets: Read pets
+            write:pets: Change pets
+  schemas:
+    Pet:
+      type: object
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        tag:
+          type: string
+          nullable: true
+        age:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        owner_email:
+          type: string
+          format: email
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+security:
+  - apiKey: []
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      tags: [pets]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [available, sold]
+        - name: X-Request-Id
+          in: header
+          schema:
+            type: string
+            maxLength: 64
+            pattern: "^[a-f0-9-]+$"
+      responses:
+        "200":
+          description: Pets
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/Pet"
+        "429":
+          description: Slow down
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createPet
+      tags: [pets]
+      security:
+        - oauth: [write:pets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPet
+      security: []
+      responses:
+        "200":
+          description: A pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePet
+      deprecated: true
+      security:
+        - basicAuth: []
+        - {}
+      responses:
+        "204":
+          description: Deleted
+  /pets/{petId}/photo:
+    post:
+      operationId: uploadPhoto
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [photo]
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                caption:
+                  type: string
+                  maxLength: 140
+      responses:
+        "204":
+          description: Stored

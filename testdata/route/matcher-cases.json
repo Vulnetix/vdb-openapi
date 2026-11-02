@@ -1,0 +1,32 @@
+{
+    "about": "Golden cases for the route matcher. Any implementation (the Guardian Worker's TypeScript matcher included) must give these answers for these templates. A null key means no match.",
+    "templates": [
+        { "method": "GET", "path": "/v1/pets", "key": "GET /pets" },
+        { "method": "GET", "path": "/v1/pets/{param}", "key": "GET /pets/{param}" },
+        { "method": "GET", "path": "/v1/pets/mine", "key": "GET /pets/mine" },
+        { "method": "DELETE", "path": "/v1/pets/{param}", "key": "DELETE /pets/{param}" },
+        { "method": "ANY", "path": "/v1/pets/{param}", "key": "ANY /pets/{param}" },
+        { "method": "GET", "path": "/v1/{param}/stats", "key": "GET /{param}/stats" },
+        { "method": "POST", "path": "/v1/files/{param}/{param}", "key": "POST /files/{param}/{param}" },
+        { "method": "GET", "path": "/", "key": "GET /" }
+    ],
+    "cases": [
+        { "method": "GET", "path": "/v1/pets", "key": "GET /pets" },
+        { "method": "GET", "path": "/v1/pets/", "key": "GET /pets" },
+        { "method": "get", "path": "/v1/pets?limit=10", "key": "GET /pets" },
+        { "method": "GET", "path": "/v1/pets/42", "key": "GET /pets/{param}" },
+        { "method": "GET", "path": "/v1/pets/mine", "key": "GET /pets/mine" },
+        { "method": "GET", "path": "/v1/pets/mi%6Ee", "key": "GET /pets/mine" },
+        { "method": "DELETE", "path": "/v1/pets/42", "key": "DELETE /pets/{param}" },
+        { "method": "PUT", "path": "/v1/pets/42", "key": "ANY /pets/{param}" },
+        { "method": "GET", "path": "/v1/pets/stats", "key": "GET /pets/{param}" },
+        { "method": "GET", "path": "/v1/dogs/stats", "key": "GET /{param}/stats" },
+        { "method": "POST", "path": "/v1/files/a/b", "key": "POST /files/{param}/{param}" },
+        { "method": "POST", "path": "/v1/files/a", "key": null },
+        { "method": "POST", "path": "/v1/files//b", "key": null },
+        { "method": "GET", "path": "/v1/Pets", "key": null },
+        { "method": "GET", "path": "/", "key": "GET /" },
+        { "method": "GET", "path": "v1/pets", "key": null },
+        { "method": "GET", "path": "/v1/pets/42/extra", "key": null }
+    ]
+}

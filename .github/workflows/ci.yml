@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, Linux, X64, vulnetix-local]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Format
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      # The committed JSON Schema must match the Go types; consumers in other
+      # languages pin it.
+      - name: Contract schema is current
+        run: |
+          go run ./cmd/genschema
+          git diff --exit-code contract/contract.schema.json
+
+      - name: Fuzz the loader
+        run: go test ./load -run '^$' -fuzz FuzzLoad -fuzztime 60s
