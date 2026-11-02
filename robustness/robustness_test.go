@@ -55,7 +55,11 @@ paths:
                 additionalProperties: false
                 properties:
                   n: {type: integer}
-        "400": {description: bad}
+        "400":
+          description: bad
+          content:
+            application/json:
+              schema: {type: object}
         "429": {description: slow}
 `
 
@@ -194,4 +198,240 @@ func index(s, sub string) int {
 		}
 	}
 	return -1
+}
+
+func vectorIDs(r robustness.Result) map[string]bool {
+	got := map[string]bool{}
+	for _, rec := range r.Recommendations {
+		got[rec.Vector] = true
+	}
+	return got
+}
+
+func contains(list []string, id string) bool {
+	for _, v := range list {
+		if v == id {
+			return true
+		}
+	}
+	return false
+}
+
+// A spec with no upload, no PII and no open map has those checks marked not
+// applicable. They are in neither total, so the score is unchanged by them.
+func TestNotApplicableChecksAreExcludedNotZero(t *testing.T) {
+	r := robustness.Score(doc(t, hardened))
+	for _, id := range []string{"upload-max-length", "upload-type-allowlist", "pii-not-in-url", "map-properties-bounded", "path-param-constrained"} {
+		if !contains(r.NotApplicable, id) {
+			t.Errorf("%s should be not applicable, got %v", id, r.NotApplicable)
+		}
+	}
+	// Every catalogue check is either applicable (has a stat) or not applicable.
+	applicable := map[string]bool{}
+	for _, v := range r.Vectors {
+		applicable[v.Vector] = true
+	}
+	for _, v := range robustness.Vectors() {
+		if applicable[v.ID] == contains(r.NotApplicable, v.ID) {
+			t.Errorf("%s is both or neither applicable and not applicable", v.ID)
+		}
+	}
+	if r.Score != 100 {
+		t.Fatalf("a spec with everything applicable defended must score 100, got %v", r.Score)
+	}
+}
+
+// Adding an upload makes the upload checks applicable. Defending them keeps
+// the score at 100; leaving them open is a real deduction.
+func TestUploadChecksApplyOnlyWhenAnUploadExists(t *testing.T) {
+	withUpload := hardened + `
+  /files:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        "201": {description: ok}
+        "400": {description: bad, content: {application/json: {schema: {type: object}}}}
+        "429": {description: slow}
+`
+	r := robustness.Score(doc(t, withUpload))
+	if contains(r.NotApplicable, "upload-max-length") {
+		t.Fatal("an upload exists, so the size check must apply")
+	}
+	if !vectorIDs(r)["upload-max-length"] || !vectorIDs(r)["upload-type-allowlist"] {
+		t.Fatalf("undefended upload not recommended: %+v", r.Recommendations)
+	}
+	if r.Score >= 100 {
+		t.Fatalf("an unbounded upload must lower the score, got %v", r.Score)
+	}
+}
+
+func TestPathAndHeaderParametersMustBeConstrained(t *testing.T) {
+	r := robustness.Score(doc(t, hardened+`
+  /files/{name}:
+    get:
+      parameters:
+        - {name: name, in: path, required: true, schema: {type: string, maxLength: 64}}
+        - {name: X-Trace, in: header, schema: {type: string, maxLength: 64}}
+      responses:
+        "200": {description: ok}
+        "400": {description: bad, content: {application/json: {schema: {type: object}}}}
+        "429": {description: slow}
+`))
+	got := vectorIDs(r)
+	for _, id := range []string{"path-param-constrained", "header-param-constrained", "string-non-empty"} {
+		if !got[id] {
+			t.Errorf("%s not recommended: %+v", id, r.Recommendations)
+		}
+	}
+	// A pattern defends all three.
+	fixed := robustness.Score(doc(t, hardened+`
+  /files/{name}:
+    get:
+      parameters:
+        - {name: name, in: path, required: true, schema: {type: string, maxLength: 64, pattern: "^[a-z0-9_-]+$"}}
+        - {name: X-Trace, in: header, schema: {type: string, maxLength: 64, pattern: "^[A-Za-z0-9._~-]+$"}}
+      responses:
+        "200": {description: ok}
+        "400": {description: bad, content: {application/json: {schema: {type: object}}}}
+        "429": {description: slow}
+`))
+	for _, id := range []string{"path-param-constrained", "header-param-constrained", "string-non-empty"} {
+		if vectorIDs(fixed)[id] {
+			t.Errorf("%s still recommended with a pattern: %+v", id, fixed.Recommendations)
+		}
+	}
+}
+
+func TestStateChangingOperationMustRequireAuth(t *testing.T) {
+	src := `
+openapi: 3.0.3
+info: {title: t, version: "1"}
+servers: [{url: https://api.example.com}]
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer}
+paths:
+  /things:
+    get:
+      security: []
+      responses: {"200": {description: ok}}
+    post:
+      security: []
+      responses: {"201": {description: ok}}
+`
+	r := robustness.Score(doc(t, src))
+	for _, rec := range r.Recommendations {
+		if rec.Vector == "mutating-requires-auth" && rec.Key == "POST /things" {
+			for _, rec2 := range r.Recommendations {
+				if rec2.Vector == "mutating-requires-auth" && rec2.Key == "GET /things" {
+					t.Fatal("a read must not be graded by the state-changing check")
+				}
+			}
+			return
+		}
+	}
+	t.Fatalf("public POST not flagged: %+v", r.Recommendations)
+}
+
+func TestErrorSchemaAndWildcardMediaType(t *testing.T) {
+	r := robustness.Score(doc(t, `
+openapi: 3.0.3
+info: {title: t, version: "1"}
+servers: [{url: https://api.example.com}]
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer}
+security: [{bearer: []}]
+paths:
+  /x:
+    put:
+      requestBody:
+        content:
+          "*/*":
+            schema: {type: object, additionalProperties: false, required: [a], properties: {a: {type: string, maxLength: 5, minLength: 1}}}
+      responses:
+        "200": {description: ok}
+        "400": {description: bad}
+        "429": {description: slow}
+`))
+	got := vectorIDs(r)
+	if !got["error-schema-declared"] || !got["body-media-type-specific"] {
+		t.Fatalf("expected error-schema-declared and body-media-type-specific: %+v", r.Recommendations)
+	}
+}
+
+func TestPersonalDataInTheURLIsFlaggedAndBodyIsNot(t *testing.T) {
+	src := func(where string) string {
+		return `
+openapi: 3.0.3
+info: {title: t, version: "1"}
+servers: [{url: https://api.example.com}]
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer}
+security: [{bearer: []}]
+paths:
+  /lookup:
+    get:
+      parameters:
+        - {name: email, in: ` + where + `, schema: {type: string, maxLength: 64, pattern: "^[a-z@.]+$"}}
+      responses:
+        "200": {description: ok}
+        "400": {description: bad, content: {application/json: {schema: {type: object}}}}
+        "429": {description: slow}
+`
+	}
+	if !vectorIDs(robustness.Score(doc(t, src("query"))))["pii-not-in-url"] {
+		t.Fatal("email in the query string must be flagged")
+	}
+	if vectorIDs(robustness.Score(doc(t, src("header"))))["pii-not-in-url"] {
+		t.Fatal("email in a header is not the URL exposure")
+	}
+}
+
+func TestOpenMapNeedsAPropertyBound(t *testing.T) {
+	base := `
+openapi: 3.0.3
+info: {title: t, version: "1"}
+servers: [{url: https://api.example.com}]
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer}
+security: [{bearer: []}]
+paths:
+  /m:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: true, required: [a], properties: {a: {type: string, maxLength: 5, minLength: 1}}%s}
+      responses:
+        "200": {description: ok}
+        "400": {description: bad, content: {application/json: {schema: {type: object}}}}
+        "429": {description: slow}
+`
+	open := robustness.Score(doc(t, replace(base, "%s", "")))
+	if !vectorIDs(open)["map-properties-bounded"] {
+		t.Fatalf("open map without maxProperties not flagged: %+v", open.Recommendations)
+	}
+	bounded := robustness.Score(doc(t, replace(base, "%s", ", maxProperties: 50")))
+	if vectorIDs(bounded)["map-properties-bounded"] {
+		t.Fatalf("bounded map still flagged: %+v", bounded.Recommendations)
+	}
+}
+
+func TestEveryVectorHasItsOwnWords(t *testing.T) {
+	for _, v := range robustness.Vectors() {
+		if v.Group == "" || v.Why == "" || v.Applies == "" {
+			t.Errorf("%s is missing group, why or applies", v.ID)
+		}
+	}
 }

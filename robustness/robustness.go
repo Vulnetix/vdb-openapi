@@ -39,6 +39,13 @@ type Vector struct {
 	CWE       int     `json:"cwe"`
 	Keyword   string  `json:"keyword"`
 	Suggest   any     `json:"suggest"`
+	// Group is the family the check belongs to (strings, objects, authentication).
+	Group string `json:"group"`
+	// Why is one sentence on why the gap matters.
+	Why string `json:"why"`
+	// Applies says what the check applies to. A spec with none of it has the
+	// check marked not applicable, which is left out of the score, not a zero.
+	Applies string `json:"applies"`
 }
 
 type catalogue struct {
@@ -129,6 +136,9 @@ type Result struct {
 	// example ECMAScript lookarounds). Their pattern vectors are left out of
 	// the score rather than guessed.
 	NotEvaluated []string `json:"notEvaluated"`
+	// NotApplicable lists the catalogue checks the spec has nothing for. They
+	// are in neither total, so they never lower the score.
+	NotApplicable []string `json:"notApplicable"`
 }
 
 type occurrence struct {
@@ -220,6 +230,14 @@ func (g *grader) result() Result {
 	for _, id := range sortedKeys(stats) {
 		r.Vectors = append(r.Vectors, *stats[id])
 	}
+	// A check with no occurrence is not applicable: it is in neither total, so
+	// a spec is never marked down for something it does not have.
+	r.NotApplicable = []string{}
+	for _, v := range cat.Vectors {
+		if stats[v.ID] == nil {
+			r.NotApplicable = append(r.NotApplicable, v.ID)
+		}
+	}
 	for _, k := range sortedKeys(ops) {
 		os := ops[k]
 		os.Score = pct(os.DefendedWeight, os.ApplicableWeight)
@@ -267,10 +285,21 @@ func (g *grader) operation(o oas.Operation) {
 	if uses, scoped := g.oauth(o); uses {
 		g.add("oauth-scoped", k, "operation", scoped)
 	}
-	has4xx, has429 := false, false
+	if mutating[strings.ToUpper(o.Method)] {
+		// Declared is graded above; a state-changing call must also require it.
+		g.add("mutating-requires-auth", k, "operation", o.Security.State == oas.SecurityRequired)
+	}
+
+	has4xx, has429, errSchema, hasErr := false, false, false, false
 	for _, r := range o.Responses {
 		if strings.HasPrefix(r.Code, "4") || r.Code == "default" {
 			has4xx = true
+			hasErr = true
+			for _, mt := range r.Content {
+				if mt.Schema != nil {
+					errSchema = true
+				}
+			}
 		}
 		if r.Code == "429" {
 			has429 = true
@@ -278,6 +307,9 @@ func (g *grader) operation(o oas.Operation) {
 	}
 	g.add("client-errors-declared", k, "operation", has4xx)
 	g.add("rate-limit-declared", k, "operation", has429)
+	if hasErr {
+		g.add("error-schema-declared", k, "operation", errSchema)
+	}
 
 	for _, p := range o.Parameters {
 		where := string(p.In) + ":" + p.Name
@@ -287,10 +319,39 @@ func (g *grader) operation(o oas.Operation) {
 		if p.In == oas.InQuery && p.Schema.Type == "array" {
 			g.add("array-param-bounded", k, where, p.Schema.MaxItems != nil)
 		}
+		if p.Schema.Type == "string" && !isUpload(p.Schema) {
+			switch p.In {
+			case oas.InPath:
+				g.add("path-param-constrained", k, where, constrained(p.Schema))
+			case oas.InHeader:
+				g.add("header-param-constrained", k, where, constrained(p.Schema))
+			}
+			if p.Required {
+				g.add("string-non-empty", k, where, nonEmpty(p.Schema))
+			}
+		}
 		g.field(k, where, p.Name, p.Schema, false, 0)
 	}
 
+	// Personal data in a path or query string is logged by everything on the
+	// way. A hint in the body or a header is not that exposure.
+	for _, h := range o.PIIHints {
+		switch {
+		case strings.HasPrefix(h.Where, "query:") || strings.HasPrefix(h.Where, "path:"):
+			g.add("pii-not-in-url", k, h.Where, false)
+		case strings.HasPrefix(h.Where, "body:") || strings.HasPrefix(h.Where, "header:"):
+			g.add("pii-not-in-url", k, h.Where, true)
+		}
+	}
+
 	if o.RequestBody != nil {
+		wildcard := false
+		for _, mt := range o.RequestBody.Content {
+			if strings.Contains(mt.Type, "*") {
+				wildcard = true
+			}
+		}
+		g.add("body-media-type-specific", k, "body", !wildcard)
 		withSchema := 0
 		for _, mt := range o.RequestBody.Content {
 			if mt.Schema != nil && (mt.Schema.Type != "" || len(mt.Schema.Types) > 0 || len(mt.Schema.Properties) > 0) {
@@ -381,6 +442,14 @@ func (g *grader) field(k, where, name string, s oas.SchemaSummary, request bool,
 		if request {
 			g.add("object-closed", k, where, s.AdditionalProperties != nil && !*s.AdditionalProperties)
 			g.add("object-required", k, where, len(s.Required) > 0)
+			if s.AdditionalProperties != nil && *s.AdditionalProperties {
+				g.add("map-properties-bounded", k, where, s.MaxProperties != nil)
+			}
+			for _, name := range s.Required {
+				if child, ok := s.Properties[name]; ok && child.Type == "string" && !isUpload(child) {
+					g.add("string-non-empty", k, joinWhere(where, name), nonEmpty(child))
+				}
+			}
 		}
 		for _, p := range sortedKeys(s.Properties) {
 			child := s.Properties[p]
@@ -548,3 +617,17 @@ func (g *grader) responseObject(k, where string, s oas.SchemaSummary, depth int)
 }
 
 func itoa(i int) string { return strconv.Itoa(i) }
+
+var mutating = map[string]bool{"POST": true, "PUT": true, "PATCH": true, "DELETE": true}
+
+// constrained reports a string that is not free text: an enum, a pattern or a
+// strict format.
+func constrained(s oas.SchemaSummary) bool {
+	return s.EnumCount > 0 || s.Pattern != "" || strictFormats[s.Format]
+}
+
+// nonEmpty reports a required string that refuses "": a minimum length of one,
+// or anything that already constrains it.
+func nonEmpty(s oas.SchemaSummary) bool {
+	return (s.MinLength != nil && *s.MinLength >= 1) || constrained(s)
+}
