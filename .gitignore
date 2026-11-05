@@ -25,3 +25,4 @@ memory.yaml
 sast.sarif
 sbom.cdx.json
 settings.json
+!.vulnetix/workflow.yaml
