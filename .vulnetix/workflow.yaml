@@ -42,7 +42,4 @@ triggers: push
 publish: true
 tea:
   visibility: public
-extras:
-  - action: api-upload
-    with:
-      file: testdata/coherence/petstore.swagger2.yaml
+extras: []
