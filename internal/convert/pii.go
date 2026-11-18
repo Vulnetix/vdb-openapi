@@ -17,7 +17,9 @@ var piiRules = []struct {
 }{
 	{"credential", regexp.MustCompile(`(?i)^(password|passwd|pwd|secret|api_?key|apikey|access_?token|refresh_?token|token|client_?secret|private_?key)$`)},
 	{"email", regexp.MustCompile(`(?i)(^|_|-)e?mail(_?address)?$|^email`)},
-	{"phone", regexp.MustCompile(`(?i)(phone|mobile|msisdn|tel(ephone)?)(_?number)?$`)},
+	// A word of its own: at the start, after "_", or a capitalised camelCase
+	// word. "withVulnIntel" and "hotel" end in "tel" but are not phones.
+	{"phone", regexp.MustCompile(`(?i:(^|_)(phone|mobile|msisdn|tel(ephone)?)(_?number)?$)|[a-z0-9](Phone|Mobile|Msisdn|Tel|Telephone)(_?Number)?$`)},
 	{"government_id", regexp.MustCompile(`(?i)^(ssn|sin|nino|tfn|tax_?id|national_?id|passport(_?number)?|driver_?licen[cs]e(_?number)?)$`)},
 	{"date_of_birth", regexp.MustCompile(`(?i)^(dob|date_?of_?birth|birth_?date|birthday)$`)},
 	{"payment_card", regexp.MustCompile(`(?i)^(card_?number|pan|cvv|cvc|cc_?number|credit_?card)$`)},
